@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ViralCut AI — Turn long videos into viral shorts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #08080C;
+    --bg-raised: #101018;
+    --line: rgba(245,243,255,0.08);
+    --line-strong: rgba(245,243,255,0.16);
+    --violet: #7C5CFC;
+    --pink: #FF4D8D;
+    --cyan: #3DDBFF;
+    --text: #F5F3FF;
+    --text-dim: #9A96B8;
+    --text-dimmer: #605C7D;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  .display { font-family: 'Archivo Expanded', sans-serif; letter-spacing: -0.01em; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  a { color: inherit; text-decoration: none; }
+
+  ::selection { background: var(--violet); color: white; }
+
+  /* ---------- NAV ---------- */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: rgba(8,8,12,0.75);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+  .logo-mark {
+    width: 22px; height: 22px; position: relative;
+    background: linear-gradient(135deg, var(--violet), var(--pink));
+    clip-path: polygon(0 20%, 100% 0, 100% 80%, 0 100%);
+  }
+  .nav-links { display: flex; gap: 36px; font-size: 14px; color: var(--text-dim); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { display: flex; align-items: center; gap: 20px; }
+  .btn {
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    border: none; border-radius: 10px; padding: 11px 20px;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: var(--text); color: #08080C;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--line-strong); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-dimmer); }
+  .btn-lg { padding: 16px 30px; font-size: 15px; border-radius: 12px; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    padding: 88px 48px 60px;
+    max-width: 1180px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-dim);
+    border: 1px solid var(--line-strong); border-radius: 999px;
+    padding: 6px 14px; margin-bottom: 28px;
+  }
+  .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); }
+
+  h1.hero-title {
+    font-size: 68px; font-weight: 800; line-height: 1.02;
+    max-width: 880px; margin: 0 auto;
+  }
+  .grad-text {
+    background: linear-gradient(90deg, var(--cyan), var(--pink) 55%, var(--violet));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero-sub {
+    font-size: 18px; color: var(--text-dim); max-width: 560px; margin: 24px auto 0;
+    font-weight: 400;
+  }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; margin-top: 36px; }
+  .hero-note { margin-top: 18px; font-size: 13px; color: var(--text-dimmer); }
+
+  /* ---------- SIGNATURE: WAVEFORM TO CLIPS ---------- */
+  .signature {
+    margin: 72px auto 0; max-width: 980px;
+    border: 1px solid var(--line); border-radius: 20px;
+    background: linear-gradient(180deg, var(--bg-raised), #0B0B11);
+    padding: 40px 40px 32px;
+  }
+  .sig-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .sig-label { font-size: 12px; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sig-dots { display: flex; gap: 6px; }
+  .sig-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+
+  .waveform-row { display: flex; align-items: center; height: 64px; gap: 2px; }
+  .wave-bar {
+    flex: 1; background: linear-gradient(180deg, var(--violet), var(--cyan));
+    border-radius: 2px; opacity: 0.85;
+    animation: wavepulse 1.8s ease-in-out infinite;
+  }
+  @keyframes wavepulse {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+
+  .split-arrow { text-align: center; color: var(--text-dimmer); font-size: 22px; margin: 18px 0; opacity: 0.6; }
+
+  .clip-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .clip-card {
+    background: #0D0D14; border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px; opacity: 0; transform: translateY(14px) scale(0.96);
+    animation: clipIn 0.6s ease forwards;
+  }
+  .clip-card:nth-child(1) { animation-delay: 0.2s; }
+  .clip-card:nth-child(2) { animation-delay: 0.4s; }
+  .clip-card:nth-child(3) { animation-delay: 0.6s; }
+  @keyframes clipIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .clip-thumb {
+    aspect-ratio: 9/16; border-radius: 8px; margin-bottom: 10px; position: relative; overflow: hidden;
+  }
+  .clip-thumb.c1 { background: linear-gradient(155deg, #3A2E6E, #7C5CFC); }
+  .clip-thumb.c2 { background: linear-gradient(155deg, #6E2E52, #FF4D8D); }
+  .clip-thumb.c3 { background: linear-gradient(155deg, #1F5A66, #3DDBFF); }
+  .clip-cap {
+    position: absolute; bottom: 10px; left: 8px; right: 8px;
+    font-size: 10px; font-weight: 700; text-align: center; color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .clip-score {
+    position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 600;
+    background: rgba(0,0,0,0.4); padding: 2px 7px; border-radius: 6px; color: var(--cyan);
+  }
+  .clip-meta { font-size: 12px; color: var(--text-dim); }
+  .clip-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+
+  /* ---------- LOGOS ---------- */
+  .logos-strip { padding: 40px 48px; text-align: center; }
+  .logos-label { font-size: 12px; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; }
+  .logos-row { display: flex; justify-content: center; gap: 56px; flex-wrap: wrap; color: var(--text-dimmer); font-size: 15px; font-weight: 600; }
+
+  /* ---------- WORKFLOW ---------- */
+  .section { padding: 100px 48px; max-width: 1180px; margin: 0 auto; }
+  .section-head { text-align: center; margin-bottom: 64px; }
+  .section-eyebrow { font-size: 13px; color: var(--pink); font-weight: 600; margin-bottom: 12px; }
+  h2.section-title { font-size: 42px; font-weight: 800; max-width: 680px; margin: 0 auto; }
+  .section-sub { color: var(--text-dim); font-size: 16px; max-width: 520px; margin: 16px auto 0; }
+
+  .workflow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .workflow-step { background: var(--bg); padding: 40px 32px; position: relative; }
+  .step-num { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--text-dimmer); margin-bottom: 24px; }
+  .step-icon { width: 40px; height: 40px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+  .step-icon.i1 { background: rgba(124,92,252,0.15); }
+  .step-icon.i2 { background: rgba(255,77,141,0.15); }
+  .step-icon.i3 { background: rgba(61,219,255,0.15); }
+  .step-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .step-desc { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ---------- FEATURES ---------- */
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .feature-card {
+    border: 1px solid var(--line); border-radius: 16px; padding: 28px;
+    background: var(--bg-raised); transition: border-color 0.2s ease;
+  }
+  .feature-card:hover { border-color: var(--line-strong); }
+  .feature-icon { font-size: 22px; margin-bottom: 16px; display: block; }
+  .feature-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .feature-desc { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ---------- PRICING ---------- */
+  .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: stretch; }
+  .price-card {
+    border: 1px solid var(--line); border-radius: 16px; padding: 28px 24px;
+    display: flex; flex-direction: column; background: var(--bg-raised);
+  }
+  .price-card.featured {
+    border: 1px solid var(--violet); background: linear-gradient(180deg, rgba(124,92,252,0.1), var(--bg-raised) 60%);
+    position: relative;
+  }
+  .price-badge {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--violet); color: white; font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px;
+  }
+  .price-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .price-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; min-height: 32px; }
+  .price-amount { font-size: 36px; font-weight: 800; }
+  .price-period { font-size: 14px; color: var(--text-dim); font-weight: 400; }
+  .price-list { list-style: none; margin: 24px 0 28px; flex: 1; }
+  .price-list li { font-size: 13px; color: var(--text-dim); padding: 7px 0; padding-left: 20px; position: relative; }
+  .price-list li::before { content: '✓'; position: absolute; left: 0; color: var(--cyan); font-weight: 700; }
+  .price-cta { width: 100%; text-align: center; }
+
+  /* ---------- FINAL CTA ---------- */
+  .final-cta {
+    text-align: center; padding: 120px 48px; position: relative;
+  }
+  .final-cta::before {
+    content: ''; position: absolute; inset: 0; margin: auto; width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(124,92,252,0.18), transparent 70%);
+    pointer-events: none;
+  }
+  .final-cta h2 { font-size: 46px; font-weight: 800; position: relative; }
+  .final-cta p { color: var(--text-dim); margin: 18px 0 36px; position: relative; }
+
+  footer {
+    border-top: 1px solid var(--line); padding: 40px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: var(--text-dimmer);
+  }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a:hover { color: var(--text-dim); }
+
+  @media (max-width: 900px) {
+    h1.hero-title { font-size: 40px; }
+    .nav-links { display: none; }
+    .workflow-grid, .feature-grid, .pricing-grid, .clip-row { grid-template-columns: 1fr; }
+    .section, .hero { padding-left: 24px; padding-right: 24px; }
+    .signature { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><div class="logo-mark"></div>ViralCut AI</div>
+  <div class="nav-links">
+    <a href="#product">Product</a>
+    <a href="#workflow">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#">Docs</a>
+  </div>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="#">Log in</a>
+    <a class="btn btn-primary" href="#">Start free</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="eyebrow"><span class="eyebrow-dot"></span>Now with automatic hook detection</div>
+  <h1 class="display hero-title">
+    Turn long videos into <span class="grad-text">viral shorts</span> in minutes
+  </h1>
+  <p class="hero-sub">Paste a link or drop a file. ViralCut finds the moments people will stop scrolling for, cuts them vertical, and captions them — ready for TikTok, Reels and Shorts.</p>
+  <div class="hero-ctas">
+    <a class="btn btn-primary btn-lg" href="#">Create your first clip</a>
+    <a class="btn btn-ghost btn-lg" href="#pricing">See pricing</a>
+  </div>
+  <p class="hero-note">No credit card required · 3 free clips every month</p>
+
+  <div class="signature">
+    <div class="sig-topline">
+      <span class="sig-label mono">source_audio.wav</span>
+      <div class="sig-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="waveform-row" id="waveform"></div>
+    <div class="split-arrow">↓</div>
+    <div class="clip-row">
+      <div class="clip-card">
+        <div class="clip-thumb c1"><span class="clip-score">94</span><span class="clip-cap">"nobody tells you this"</span></div>
+        <div class="clip-title">The hook that changes everything</div>
+        <div class="clip-meta mono">0:24 · 9:16</div>
+      </div>
+      <div class="clip-card">
+        <div class="clip-thumb c2"><span class="clip-score">89</span><span class="clip-cap">"here's what actually works"</span></div>
+        <div class="clip-title">The pricing mistake</div>
+        <div class="clip-meta mono">0:41 · 9:16</div>
+      </div>
+      <div class="clip-card">
+        <div class="clip-thumb c3"><span class="clip-score">92</span><span class="clip-cap">"and that's when it clicked"</span></div>
+        <div class="clip-title">The turning point</div>
+        <div class="clip-meta mono">0:33 · 9:16</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="logos-strip">
+  <div class="logos-label mono">Built for creators who post everywhere</div>
+  <div class="logos-row">
+    <span>TikTok</span><span>Instagram Reels</span><span>YouTube Shorts</span><span>Twitch clips</span><span>Podcasts</span>
+  </div>
+</div>
+
+<section class="section" id="workflow">
+  <div class="section-head">
+    <div class="section-eyebrow">HOW IT WORKS</div>
+    <h2 class="display section-title">From raw footage to ready-to-post in three steps</h2>
+    <p class="section-sub">No editing skills needed. The AI does the finding, cutting and captioning — you just review and publish.</p>
+  </div>
+  <div class="workflow-grid">
+    <div class="workflow-step">
+      <div class="step-num">01</div>
+      <div class="step-icon i1">🎬</div>
+      <div class="step-title">Upload or paste a link</div>
+      <div class="step-desc">Drop a video file, or paste a YouTube, Twitch or podcast link. No format wrangling.</div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">02</div>
+      <div class="step-icon i2">✨</div>
+      <div class="step-title">AI finds the moments</div>
+      <div class="step-desc">ViralCut transcribes the audio and scores every segment for hook strength, pacing and payoff.</div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">03</div>
+      <div class="step-icon i3">📲</div>
+      <div class="step-title">Export, ready to post</div>
+      <div class="step-desc">Vertical crop, animated captions and titles applied automatically. Download and publish.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="product">
+  <div class="section-head">
+    <div class="section-eyebrow">EVERYTHING INCLUDED</div>
+    <h2 class="display section-title">Built for people who post daily, not occasionally</h2>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🎯</span>
+      <div class="feature-title">Viral moment detection</div>
+      <div class="feature-desc">Trained on what actually drives watch time — strong hooks, emotional beats, clean payoffs.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💬</span>
+      <div class="feature-title">Word-by-word captions</div>
+      <div class="feature-desc">Animated, on-beat subtitles in the style that performs on TikTok and Reels today.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🖼️</span>
+      <div class="feature-title">Auto vertical reframe</div>
+      <div class="feature-desc">Speaker tracking keeps faces centered when converting widescreen to 9:16.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🏷️</span>
+      <div class="feature-title">Title and hook suggestions</div>
+      <div class="feature-desc">Every clip comes with a scored, ready-to-use caption for the post itself.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎨</span>
+      <div class="feature-title">Brand templates</div>
+      <div class="feature-desc">Save your fonts, colors and logo placement once, apply to every export.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">👥</span>
+      <div class="feature-title">Team workspaces</div>
+      <div class="feature-desc">Share projects with editors or clients, with roles and approval flows on Agency.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="section-head">
+    <div class="section-eyebrow">PRICING</div>
+    <h2 class="display section-title">Plans that scale with how much you post</h2>
+    <p class="section-sub">Cancel anytime. Unused clips don't roll over. Prices in EUR.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Free</div>
+      <div class="price-desc">Try the workflow</div>
+      <div class="price-amount">€0<span class="price-period">/mo</span></div>
+      <ul class="price-list">
+        <li>3 clips / month</li>
+        <li>720p export</li>
+        <li>Watermark included</li>
+        <li>Standard queue</li>
+      </ul>
+      <a class="btn btn-ghost price-cta" href="#">Start free</a>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Starter</div>
+      <div class="price-desc">For consistent posting</div>
+      <div class="price-amount">€19<span class="price-period">/mo</span></div>
+      <ul class="price-list">
+        <li>30 clips / month</li>
+        <li>1080p export</li>
+        <li>Small watermark</li>
+        <li>AI captions included</li>
+      </ul>
+      <a class="btn btn-ghost price-cta" href="#">Choose Starter</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge">Most popular</div>
+      <div class="price-name">Creator</div>
+      <div class="price-desc">For full-time creators</div>
+      <div class="price-amount">€39<span class="price-period">/mo</span></div>
+      <ul class="price-list">
+        <li>100 clips / month</li>
+        <li>No watermark</li>
+        <li>Premium caption styles</li>
+        <li>Priority processing</li>
+      </ul>
+      <a class="btn btn-primary price-cta" href="#">Choose Creator</a>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Agency</div>
+      <div class="price-desc">For teams and clients</div>
+      <div class="price-amount">€199<span class="price-period">/mo</span></div>
+      <ul class="price-list">
+        <li>1,000 clips / month</li>
+        <li>Multiple seats</li>
+        <li>Client workspaces</li>
+        <li>Basic white-label</li>
+      </ul>
+      <a class="btn btn-ghost price-cta" href="#">Choose Agency</a>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <h2 class="display">Your next viral clip is already in your footage</h2>
+  <p>Upload your first video and see what the AI finds.</p>
+  <a class="btn btn-primary btn-lg" href="#">Create your first clip — it's free</a>
+</section>
+
+<footer>
+  <div class="logo"><div class="logo-mark" style="width:16px;height:16px;"></div>ViralCut AI</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Support</a>
+  </div>
+  <div>© 2026 ViralCut AI</div>
+</footer>
+
+<script>
+  const wf = document.getElementById('waveform');
+  const bars = 60;
+  for (let i = 0; i < bars; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    const h = 20 + Math.sin(i * 0.4) * 15 + Math.random() * 25;
+    bar.style.height = h + 'px';
+    bar.style.animationDelay = (i * 0.02) + 's';
+    wf.appendChild(bar);
+  }
+</script>
+
+</body>
+</html>
