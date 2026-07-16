@@ -85,7 +85,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, clipsFound: candidates.length });
   } catch (err) {
+    console.error("Processing pipeline failed:", err);
     await supabaseAdmin.from("projects").update({ status: "failed" }).eq("id", projectId);
-    return NextResponse.json({ error: "Processing failed" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json({ error: `Processing failed: ${message}` }, { status: 500 });
   }
 }
