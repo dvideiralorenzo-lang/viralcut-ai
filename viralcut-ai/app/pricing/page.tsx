@@ -14,6 +14,7 @@ const PLANS = [
 export default function PricingPage() {
   const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleChoose(planKey: string) {
     if (planKey === "free") {
@@ -22,6 +23,7 @@ export default function PricingPage() {
     }
 
     setLoadingPlan(planKey);
+    setError(null);
 
     const { data: { user } } = await supabaseBrowser.auth.getUser();
     if (!user) {
@@ -34,8 +36,16 @@ export default function PricingPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: user.id, plan: planKey }),
     });
-    const { url } = await res.json();
-    window.location.href = url;
+
+    const data = await res.json();
+
+    if (!res.ok || !data.url) {
+      setError(data.error ?? "Something went wrong starting checkout.");
+      setLoadingPlan(null);
+      return;
+    }
+
+    window.location.href = data.url;
   }
 
   return (
@@ -43,6 +53,7 @@ export default function PricingPage() {
       <div className="text-center mb-14">
         <h1 className="font-display text-4xl font-bold">Plans that scale with how much you post</h1>
         <p className="text-dim mt-3">Cancel anytime. Prices in EUR.</p>
+        {error && <p className="text-pink text-sm mt-4">{error}</p>}
       </div>
 
       <div className="grid md:grid-cols-4 gap-4">
