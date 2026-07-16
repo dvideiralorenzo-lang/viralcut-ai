@@ -8,14 +8,24 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 export async function POST(req: NextRequest) {
   const { userId, plan } = (await req.json()) as { userId: string; plan: PlanKey };
 
-  const { data: profile } = await supabaseAdmin
+  const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
     .select("email")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
+
+  if (profileError) {
+    return NextResponse.json(
+      { error: `Database error: ${profileError.message}` },
+      { status: 500 }
+    );
+  }
 
   if (!profile) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: `No profile found for user ID ${userId}. Try logging out and back in.` },
+      { status: 404 }
+    );
   }
 
   const session = await createCheckoutSession({
