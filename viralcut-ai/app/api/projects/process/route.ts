@@ -1,14 +1,10 @@
 // app/api/projects/process/route.ts
 // Orchestrates: transcribe -> detect viral clips -> queue rendering.
-// This runs on the server, using the service-role Supabase client since it
-// writes to tables (transcripts, clips) beyond what the uploading user's
-// session would normally touch directly.
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { detectViralClips } from "@/lib/detect-clips";
 
-// Swap this for your chosen provider (Deepgram shown; AssemblyAI works similarly).
 async function transcribeVideo(videoUrl: string) {
   const response = await fetch("https://api.deepgram.com/v1/listen?punctuate=true&utterances=true", {
     method: "POST",
@@ -20,7 +16,20 @@ async function transcribeVideo(videoUrl: string) {
   });
 
   const data = await response.json();
+
+  if (!response.ok || data.err_code || data.error) {
+    throw new Error(
+      `Deepgram error: ${JSON.stringify(data.err_msg ?? data.error ?? data)}`
+    );
+  }
+
   const utterances = data.results?.utterances ?? [];
+
+  if (utterances.length === 0) {
+    throw new Error(
+      `Deepgram returned no utterances. Full response: ${JSON.stringify(data).slice(0, 500)}`
+    );
+  }
 
   return {
     fullText: data.results?.channels?.[0]?.alternatives?.[0]?.transcript ?? "",
@@ -46,7 +55,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // 1. Transcribe
     await supabaseAdmin.from("projects").update({ status: "transcribing" }).eq("id", projectId);
 
     const videoUrl = project.original_video_url ?? project.source_url;
@@ -58,7 +66,6 @@ export async function POST(req: NextRequest) {
       segments,
     });
 
-    // 2. Detect viral clips
     await supabaseAdmin.from("projects").update({ status: "analyzing" }).eq("id", projectId);
 
     const candidates = await detectViralClips(segments);
@@ -77,10 +84,6 @@ export async function POST(req: NextRequest) {
       }))
     );
 
-    // 3. Rendering is handled by a separate worker process (see workers/render-short.ts)
-    // because FFmpeg jobs run too long for a serverless function. In production,
-    // push a message to a queue (e.g. Inngest, Trigger.dev, or a Redis queue)
-    // here instead of rendering inline.
     await supabaseAdmin.from("projects").update({ status: "rendering" }).eq("id", projectId);
 
     return NextResponse.json({ success: true, clipsFound: candidates.length });
