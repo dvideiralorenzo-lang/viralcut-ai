@@ -6,7 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 import { detectViralClips } from "@/lib/detect-clips";
 
 async function transcribeVideo(videoUrl: string) {
-  const response = await fetch("https://api.deepgram.com/v1/listen?punctuate=true&utterances=true&model=nova-2&smart_format=true", {
+  const response = await fetch("https://api.deepgram.com/v1/listen?punctuate=true&utterances=true&model=nova-2&smart_format=true&language=es", {
     method: "POST",
     headers: {
       Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
