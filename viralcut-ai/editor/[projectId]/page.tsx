@@ -127,7 +127,6 @@ export default function EditorPage() {
                   download
                   className="mt-3 text-center text-xs bg-ink text-base font-semibold rounded-lg py-2 hover:opacity-90"
                 >
-                >
                   Download
                 </a>
               )}
