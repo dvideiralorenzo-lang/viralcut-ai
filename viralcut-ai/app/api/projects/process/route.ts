@@ -1,5 +1,5 @@
 // app/api/projects/process/route.ts
-// Orchestrates: transcribe -> detect viral clips -> queue rendering.
+// Orchestrates: transcribe -> detect viral clips -> trigger rendering.
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
@@ -41,6 +41,17 @@ async function transcribeVideo(videoUrl: string) {
   };
 }
 
+async function triggerRender(clipId: string) {
+  await fetch(`${process.env.WORKER_URL}/render`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+    },
+    body: JSON.stringify({ clipId }),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const { projectId } = await req.json();
 
@@ -70,21 +81,30 @@ export async function POST(req: NextRequest) {
 
     const candidates = await detectViralClips(segments);
 
-    await supabaseAdmin.from("clips").insert(
-      candidates.map((c) => ({
-        project_id: projectId,
-        title: c.title,
-        hook: c.hook,
-        start_time: c.start_time,
-        end_time: c.end_time,
-        score: c.score,
-        reason: c.reason,
-        caption_style: c.caption_style,
-        status: "pending",
-      }))
-    );
+    const { data: insertedClips } = await supabaseAdmin
+      .from("clips")
+      .insert(
+        candidates.map((c) => ({
+          project_id: projectId,
+          title: c.title,
+          hook: c.hook,
+          start_time: c.start_time,
+          end_time: c.end_time,
+          score: c.score,
+          reason: c.reason,
+          caption_style: c.caption_style,
+          status: "pending",
+        }))
+      )
+      .select();
 
     await supabaseAdmin.from("projects").update({ status: "rendering" }).eq("id", projectId);
+
+    // Fire off a render request for each clip — the worker handles them
+    // independently and updates each clip's status when done.
+    if (insertedClips) {
+      await Promise.all(insertedClips.map((clip) => triggerRender(clip.id)));
+    }
 
     return NextResponse.json({ success: true, clipsFound: candidates.length });
   } catch (err) {
