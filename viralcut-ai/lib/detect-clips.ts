@@ -66,7 +66,7 @@ export async function detectViralClips(
   // NOTE: lower bound relaxed to 3s temporarily for easier testing with short clips.
   // Restore to 15 before using with real, longer source videos.
   return parsed
-    .filter((c) => c.end_time - c.start_time >= 3 && c.end_time - c.start_time <= 90)
+    .filter((c) => c.end_time - c.start_time >= 15 && c.end_time - c.start_time <= 90)
     .map((c) => ({ ...c, caption_style: c.caption_style ?? "bold-yellow" }))
     .sort((a, b) => b.score - a.score);
 }
