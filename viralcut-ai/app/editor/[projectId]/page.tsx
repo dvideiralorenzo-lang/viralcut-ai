@@ -121,9 +121,8 @@ export default function EditorPage() {
               <p className="font-semibold text-sm mb-1">{clip.title}</p>
               <p className="text-xs text-dim mb-3">"{clip.hook}"</p>
               <p className="text-xs text-dimmer mt-auto">{clip.reason}</p>
-              {clip.output_video_url && (
-                
-                  href={clip.output_video_url}
+             {clip.output_video_url && (
+                <a href={clip.output_video_url}
                   download
                   className="mt-3 text-center text-xs bg-ink text-base font-semibold rounded-lg py-2 hover:opacity-90"
                 >
