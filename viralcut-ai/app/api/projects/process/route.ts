@@ -47,14 +47,14 @@ async function transcribeVideo(videoUrl: string) {
     })),
   };
 }
-async function triggerRender(clipId: string) {
+async function triggerRender(clipId: string, words: any[] = []) {
   await fetch(`${process.env.WORKER_URL}/render`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WORKER_SECRET}`,
     },
-    body: JSON.stringify({ clipId }),
+    body: JSON.stringify({ clipId, words }),
   });
 }
 
@@ -75,12 +75,13 @@ export async function POST(req: NextRequest) {
     await supabaseAdmin.from("projects").update({ status: "transcribing" }).eq("id", projectId);
 
     const videoUrl = project.original_video_url ?? project.source_url;
-    const { fullText, segments } = await transcribeVideo(videoUrl);
+    const { fullText, segments, words } = await transcribeVideo(videoUrl);
 
     await supabaseAdmin.from("transcripts").insert({
       project_id: projectId,
       full_text: fullText,
       segments,
+      words,
     });
 
     await supabaseAdmin.from("projects").update({ status: "analyzing" }).eq("id", projectId);
@@ -108,8 +109,19 @@ export async function POST(req: NextRequest) {
 
     // Fire off a render request for each clip — the worker handles them
     // independently and updates each clip's status when done.
-    if (insertedClips) {
-      await Promise.all(insertedClips.map((clip) => triggerRender(clip.id)));
+   if (insertedClips) {
+      await Promise.all(
+        insertedClips.map((clip) => {
+          const clipWords = words
+            .filter((w: any) => w.start >= clip.start_time && w.end <= clip.end_time)
+            .map((w: any) => ({
+              word: w.word,
+              start: w.start - clip.start_time,
+              end: w.end - clip.start_time,
+            }));
+          return triggerRender(clip.id, clipWords);
+        })
+      );
     }
 
     return NextResponse.json({ success: true, clipsFound: candidates.length });
