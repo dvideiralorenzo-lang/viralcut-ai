@@ -113,9 +113,9 @@ export default function EditorPage() {
             </div>
             <div className="p-4 flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono text-cyan">Score {clip.score}</span>
+                <span className="text-xs font-mono text-cyan">Score: {clip.score}</span>
                 <span className="text-xs text-dimmer">
-                  {Math.round(clip.end_time - clip.start_time)}s
+                  {Math.round(clip.end_time - clip.start_time)}s duration
                 </span>
               </div>
               <p className="font-semibold text-sm mb-1">{clip.title}</p>
