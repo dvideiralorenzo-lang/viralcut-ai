@@ -31,6 +31,8 @@ async function transcribeVideo(videoUrl: string) {
     );
   }
 
+  const words = data.results?.channels?.[0]?.alternatives?.[0]?.words ?? [];
+
   return {
     fullText: data.results?.channels?.[0]?.alternatives?.[0]?.transcript ?? "",
     segments: utterances.map((u: any) => ({
@@ -38,9 +40,13 @@ async function transcribeVideo(videoUrl: string) {
       end: u.end,
       text: u.transcript,
     })),
+    words: words.map((w: any) => ({
+      word: w.punctuated_word ?? w.word,
+      start: w.start,
+      end: w.end,
+    })),
   };
 }
-
 async function triggerRender(clipId: string) {
   await fetch(`${process.env.WORKER_URL}/render`, {
     method: "POST",
