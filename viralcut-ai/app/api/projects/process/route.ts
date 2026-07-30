@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 // app/api/projects/process/route.ts
 // Orchestrates: transcribe -> detect viral clips -> trigger rendering.
 
@@ -72,11 +73,29 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    if (project.source_type === "youtube" && !project.original_video_url) {
+      await supabaseAdmin.from("projects").update({ status: "downloading" }).eq("id", projectId);
+
+      const downloadRes = await fetch(`${process.env.WORKER_URL}/download-youtube`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.WORKER_SECRET}`,
+        },
+        body: JSON.stringify({ projectId, url: project.source_url }),
+      });
+
+      const downloadData = await downloadRes.json();
+      if (!downloadRes.ok) {
+        throw new Error(`YouTube download failed: ${downloadData.error}`);
+      }
+      project.original_video_url = downloadData.url;
+    }
+
     await supabaseAdmin.from("projects").update({ status: "transcribing" }).eq("id", projectId);
 
     const videoUrl = project.original_video_url ?? project.source_url;
     const { fullText, segments, words } = await transcribeVideo(videoUrl);
-
     await supabaseAdmin.from("transcripts").insert({
       project_id: projectId,
       full_text: fullText,
