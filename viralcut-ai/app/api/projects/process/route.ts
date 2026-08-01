@@ -48,14 +48,14 @@ async function transcribeVideo(videoUrl: string) {
     })),
   };
 }
-async function triggerRender(clipId: string, words: any[] = []) {
+async function triggerRender(clipId: string, words: any[] = [], captionColor = "yellow", captionPosition = "bottom") {
   await fetch(`${process.env.WORKER_URL}/render`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WORKER_SECRET}`,
     },
-    body: JSON.stringify({ clipId, words }),
+    body: JSON.stringify({ clipId, words, captionColor, captionPosition }),
   });
 }
 
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
               start: w.start - clip.start_time,
               end: w.end - clip.start_time,
             }));
-          return triggerRender(clip.id, clipWords);
+          return triggerRender(clip.id, clipWords, project.caption_color, project.caption_position);
         })
       );
     }
