@@ -104,7 +104,7 @@ export default function DashboardPage() {
             <p className="text-dim text-sm mt-1 capitalize">{plan} plan</p>
           </div>
           
-            href="/upload"
+            <a href="/upload"
             className="bg-ink text-base font-semibold rounded-lg px-5 py-3 hover:opacity-90 transition"
           >
             + New project
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <p className="font-semibold mb-1">Start your first project</p>
             <p className="text-dim text-sm mb-6">Upload a video to get your first AI-detected clips.</p>
             
-              href="/upload"
+              <a href="/upload"
               className="inline-block bg-ink text-base font-semibold rounded-lg px-5 py-3 hover:opacity-90 transition"
             >
               Create project
@@ -142,7 +142,7 @@ export default function DashboardPage() {
           <div className="grid gap-3">
             {projects.map((project) => (
               
-                key={project.id}
+                <a key={project.id}
                 href={`/editor/${project.id}`}
                 className="flex items-center justify-between bg-raised border border-line rounded-xl px-5 py-4 hover:border-dimmer transition"
               >
