@@ -16,6 +16,33 @@ interface Usage {
   clips_limit: number;
 }
 
+function NavBar() {
+  const router = useRouter();
+  async function handleLogout() {
+    await supabaseBrowser.auth.signOut();
+    router.push("/login");
+  }
+  return (
+    <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-line">
+      <a href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
+        <div
+          className="w-5 h-5"
+          style={{
+            background: "linear-gradient(135deg, #7C5CFC, #FF4D8D)",
+            clipPath: "polygon(0 20%, 100% 0, 100% 80%, 0 100%)",
+          }}
+        />
+        ViralCut AI
+      </a>
+      <div className="flex items-center gap-4 text-sm">
+        <a href="/dashboard" className="text-dim hover:text-ink">Projects</a>
+        <a href="/pricing" className="text-dim hover:text-ink">Pricing</a>
+        <button onClick={handleLogout} className="text-dim hover:text-ink">Log out</button>
+      </div>
+    </nav>
+  );
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -58,75 +85,81 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p className="text-dim">Loading your dashboard…</p>
+      <main className="min-h-screen">
+        <NavBar />
+        <div className="flex items-center justify-center py-20">
+          <p className="text-dim">Loading your dashboard…</p>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen px-6 py-10 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-10">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Your projects</h1>
-          <p className="text-dim text-sm mt-1 capitalize">{plan} plan</p>
-        </div>
-        <a
-          href="/upload"
-          className="bg-ink text-base font-semibold rounded-lg px-5 py-3 hover:opacity-90 transition"
-        >
-          + New project
-        </a>
-      </div>
-
-      {usage && (
-        <div className="bg-raised border border-line rounded-xl p-5 mb-8 flex items-center justify-between">
+    <main className="min-h-screen">
+      <NavBar />
+      <div className="px-6 py-10 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-10">
           <div>
-            <p className="text-sm text-dim">Clips this month</p>
-            <p className="text-xl font-bold mt-1">
-              {usage.clips_used} <span className="text-dim font-normal">/ {usage.clips_limit}</span>
-            </p>
+            <h1 className="font-display text-2xl font-bold">Your projects</h1>
+            <p className="text-dim text-sm mt-1 capitalize">{plan} plan</p>
           </div>
-          {plan === "free" && (
-            <a href="/pricing" className="text-sm text-cyan underline">
-              Upgrade for more clips
-            </a>
-          )}
-        </div>
-      )}
-
-      {projects.length === 0 ? (
-        <div className="border border-dashed border-line rounded-xl p-16 text-center">
-          <p className="font-semibold mb-1">Start your first project</p>
-          <p className="text-dim text-sm mb-6">Upload a video or paste a link to get your first AI-detected clips.</p>
-          <a
+          
             href="/upload"
-            className="inline-block bg-ink text-base font-semibold rounded-lg px-5 py-3 hover:opacity-90 transition"
+            className="bg-ink text-base font-semibold rounded-lg px-5 py-3 hover:opacity-90 transition"
           >
-            Create project
+            + New project
           </a>
         </div>
-      ) : (
-        <div className="grid gap-3">
-          {projects.map((project) => (
-            <a
-              key={project.id}
-              href={`/editor/${project.id}`}
-              className="flex items-center justify-between bg-raised border border-line rounded-xl px-5 py-4 hover:border-dimmer transition"
+
+        {usage && (
+          <div className="bg-raised border border-line rounded-xl p-5 mb-8 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-dim">Clips this month</p>
+              <p className="text-xl font-bold mt-1">
+                {usage.clips_used} <span className="text-dim font-normal">/ {usage.clips_limit}</span>
+              </p>
+            </div>
+            {plan === "free" && (
+              <a href="/pricing" className="text-sm text-cyan underline">
+                Upgrade for more clips
+              </a>
+            )}
+          </div>
+        )}
+
+        {projects.length === 0 ? (
+          <div className="border border-dashed border-line rounded-xl p-16 text-center">
+            <p className="font-semibold mb-1">Start your first project</p>
+            <p className="text-dim text-sm mb-6">Upload a video to get your first AI-detected clips.</p>
+            
+              href="/upload"
+              className="inline-block bg-ink text-base font-semibold rounded-lg px-5 py-3 hover:opacity-90 transition"
             >
-              <div>
-                <p className="font-medium">{project.title}</p>
-                <p className="text-dim text-xs mt-1">
-                  {new Date(project.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              <span className="text-xs px-3 py-1 rounded-full bg-violet/15 text-cyan capitalize">
-                {project.status}
-              </span>
+              Create project
             </a>
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {projects.map((project) => (
+              
+                key={project.id}
+                href={`/editor/${project.id}`}
+                className="flex items-center justify-between bg-raised border border-line rounded-xl px-5 py-4 hover:border-dimmer transition"
+              >
+                <div>
+                  <p className="font-medium">{project.title}</p>
+                  <p className="text-dim text-xs mt-1">
+                    {new Date(project.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <span className="text-xs px-3 py-1 rounded-full bg-violet/15 text-cyan capitalize">
+                  {project.status}
+                </span>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }
