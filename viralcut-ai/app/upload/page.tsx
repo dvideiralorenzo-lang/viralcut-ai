@@ -34,6 +34,8 @@ function NavBar() {
 export default function UploadPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
+  const [captionColor, setCaptionColor] = useState("yellow");
+  const [captionPosition, setCaptionPosition] = useState("bottom");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -90,6 +92,8 @@ export default function UploadPage() {
         source_type: "upload",
         original_video_url: publicUrl.publicUrl,
         status: "uploaded",
+        caption_color: captionColor,
+        caption_position: captionPosition,
       })
       .select()
       .single();
@@ -146,6 +150,33 @@ export default function UploadPage() {
                   <p className="text-dim text-xs">or click to browse — MP4, up to 50MB</p>
                 </div>
               )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-dim block mb-1">Caption color</label>
+                <select
+                  value={captionColor}
+                  onChange={(e) => setCaptionColor(e.target.value)}
+                  className="w-full bg-raised border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-violet"
+                >
+                  <option value="yellow">Yellow</option>
+                  <option value="white">White</option>
+                  <option value="cyan">Cyan</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-dim block mb-1">Caption position</label>
+                <select
+                  value={captionPosition}
+                  onChange={(e) => setCaptionPosition(e.target.value)}
+                  className="w-full bg-raised border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-violet"
+                >
+                  <option value="bottom">Bottom</option>
+                  <option value="center">Center</option>
+                  <option value="top">Top</option>
+                </select>
+              </div>
             </div>
 
             {error && <p className="text-pink text-sm">{error}</p>}
