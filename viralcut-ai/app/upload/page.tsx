@@ -6,7 +6,7 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 
 export default function UploadPage() {
   const router = useRouter();
-  const [sourceType, setSourceType] = useState<"upload" | "youtube">("youtube");
+  const [sourceType, setSourceType] = useState<"upload" | "youtube">("upload");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,26 +75,7 @@ export default function UploadPage() {
         <h1 className="font-display text-2xl font-bold mb-1">New project</h1>
         <p className="text-dim text-sm mb-8">Paste a link or upload a file to get started.</p>
 
-        <div className="flex gap-2 mb-6">
-          <button
-            type="button"
-            onClick={() => setSourceType("youtube")}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
-              sourceType === "youtube" ? "border-violet bg-violet/10" : "border-line text-dim"
-            }`}
-          >
-            Paste a link
-          </button>
-          <button
-            type="button"
-            onClick={() => setSourceType("upload")}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
-              sourceType === "upload" ? "border-violet bg-violet/10" : "border-line text-dim"
-            }`}
-          >
-            Upload a file
-          </button>
-        </div>
+        <p className="text-xs text-dimmer mb-4">Video links coming soon — upload a file for now.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {sourceType === "youtube" ? (
