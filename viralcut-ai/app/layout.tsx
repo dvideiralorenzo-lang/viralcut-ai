@@ -4,6 +4,16 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "ViralCut AI — Turn long videos into viral shorts",
   description: "Upload a long video, get AI-detected viral clips ready for TikTok, Reels and YouTube Shorts.",
+  openGraph: {
+    title: "ViralCut AI — Turn long videos into viral shorts",
+    description: "Upload a long video, get AI-detected viral clips ready for TikTok, Reels and YouTube Shorts.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ViralCut AI — Turn long videos into viral shorts",
+    description: "Upload a long video, get AI-detected viral clips ready for TikTok, Reels and YouTube Shorts.",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
