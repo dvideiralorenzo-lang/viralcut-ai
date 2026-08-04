@@ -33,12 +33,14 @@ function NavBar() {
 
 export default function UploadPage() {
   const router = useRouter();
+  const [sourceType, setSourceType] = useState<"upload" | "youtube">("upload");
+  const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [captionColor, setCaptionColor] = useState("yellow");
-  const [captionPosition, setCaptionPosition] = useState("bottom");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [captionColor, setCaptionColor] = useState("yellow");
+  const [captionPosition, setCaptionPosition] = useState("bottom");
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleDrag(e: React.DragEvent, active: boolean) {
@@ -62,7 +64,6 @@ export default function UploadPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file) return;
     setLoading(true);
     setError(null);
 
@@ -72,25 +73,36 @@ export default function UploadPage() {
       return;
     }
 
-    const filePath = `${user.id}/${Date.now()}-${file.name}`;
-    const { error: uploadError } = await supabaseBrowser.storage
-      .from("videos")
-      .upload(filePath, file);
+    let original_video_url: string | null = null;
 
-    if (uploadError) {
-      setError(uploadError.message);
-      setLoading(false);
-      return;
+    if (sourceType === "upload") {
+      if (!file) {
+        setError("Please choose a video file.");
+        setLoading(false);
+        return;
+      }
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabaseBrowser.storage
+        .from("videos")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        setError(uploadError.message);
+        setLoading(false);
+        return;
+      }
+      const { data: publicUrl } = supabaseBrowser.storage.from("videos").getPublicUrl(filePath);
+      original_video_url = publicUrl.publicUrl;
     }
-    const { data: publicUrl } = supabaseBrowser.storage.from("videos").getPublicUrl(filePath);
 
     const { data: project, error: insertError } = await supabaseBrowser
       .from("projects")
       .insert({
         user_id: user.id,
-        title: file.name,
-        source_type: "upload",
-        original_video_url: publicUrl.publicUrl,
+        title: sourceType === "youtube" ? "YouTube import" : file?.name ?? "Untitled",
+        source_type: sourceType,
+        source_url: sourceType === "youtube" ? url : null,
+        original_video_url,
         status: "uploaded",
         caption_color: captionColor,
         caption_position: captionPosition,
@@ -119,38 +131,70 @@ export default function UploadPage() {
       <div className="flex items-center justify-center px-6 py-20">
         <div className="w-full max-w-lg">
           <h1 className="font-display text-2xl font-bold mb-1">New project</h1>
-          <p className="text-dim text-sm mb-8">Drop a video and ViralCut will find the best moments.</p>
+          <p className="text-dim text-sm mb-8">Upload a video or paste a link to get started.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div
-              onDragOver={(e) => handleDrag(e, true)}
-              onDragLeave={(e) => handleDrag(e, false)}
-              onDrop={handleDrop}
-              onClick={() => inputRef.current?.click()}
-              className={`rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition ${
-                dragActive ? "border-violet bg-violet/5" : "border-line hover:border-dimmer"
+          <div className="flex gap-2 mb-6">
+            <button
+              type="button"
+              onClick={() => setSourceType("upload")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
+                sourceType === "upload" ? "border-violet bg-violet/10" : "border-line text-dim"
               }`}
             >
+              Upload a file
+            </button>
+            <button
+              type="button"
+              onClick={() => setSourceType("youtube")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
+                sourceType === "youtube" ? "border-violet bg-violet/10" : "border-line text-dim"
+              }`}
+            >
+              Paste a link
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {sourceType === "upload" ? (
+              <div
+                onDragOver={(e) => handleDrag(e, true)}
+                onDragLeave={(e) => handleDrag(e, false)}
+                onDrop={handleDrop}
+                onClick={() => inputRef.current?.click()}
+                className={`rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition ${
+                  dragActive ? "border-violet bg-violet/5" : "border-line hover:border-dimmer"
+                }`}
+              >
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+                {file ? (
+                  <div>
+                    <p className="font-semibold text-sm">{file.name}</p>
+                    <p className="text-dim text-xs mt-1">{formatSize(file.size)}</p>
+                    <p className="text-cyan text-xs mt-3">Click to choose a different file</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-semibold text-sm mb-1">Drop your video here</p>
+                    <p className="text-dim text-xs">or click to browse — MP4, up to 50MB</p>
+                  </div>
+                )}
+              </div>
+            ) : (
               <input
-                ref={inputRef}
-                type="file"
-                accept="video/*"
-                className="hidden"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                type="url"
+                required
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=..."
+                className="w-full bg-raised border border-line rounded-lg px-4 py-3 text-ink outline-none focus:border-violet"
               />
-              {file ? (
-                <div>
-                  <p className="font-semibold text-sm">{file.name}</p>
-                  <p className="text-dim text-xs mt-1">{formatSize(file.size)}</p>
-                  <p className="text-cyan text-xs mt-3">Click to choose a different file</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="font-semibold text-sm mb-1">Drop your video here</p>
-                  <p className="text-dim text-xs">or click to browse — MP4, up to 50MB</p>
-                </div>
-              )}
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -183,7 +227,7 @@ export default function UploadPage() {
 
             <button
               type="submit"
-              disabled={loading || !file}
+              disabled={loading}
               className="w-full bg-ink text-base font-semibold rounded-lg py-3 hover:opacity-90 transition disabled:opacity-40"
             >
               {loading ? "Starting…" : "Find viral clips"}
