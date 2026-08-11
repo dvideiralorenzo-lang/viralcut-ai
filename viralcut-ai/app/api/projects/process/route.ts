@@ -128,19 +128,18 @@ export async function POST(req: NextRequest) {
 
     // Fire off a render request for each clip — the worker handles them
     // independently and updates each clip's status when done.
-   if (insertedClips) {
-      await Promise.all(
-        insertedClips.map((clip) => {
-          const clipWords = words
-            .filter((w: any) => w.start >= clip.start_time && w.end <= clip.end_time)
-            .map((w: any) => ({
-              word: w.word,
-              start: w.start - clip.start_time,
-              end: w.end - clip.start_time,
-            }));
-          return triggerRender(clip.id, clipWords, project.caption_color, project.caption_position);
-        })
-      );
+  if (insertedClips) {
+      for (const clip of insertedClips) {
+        const clipWords = words
+          .filter((w: any) => w.start >= clip.start_time && w.end <= clip.end_time)
+          .map((w: any) => ({
+            word: w.word,
+            start: w.start - clip.start_time,
+            end: w.end - clip.start_time,
+          }));
+        await triggerRender(clip.id, clipWords, project.caption_color, project.caption_position);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
     }
 
     return NextResponse.json({ success: true, clipsFound: candidates.length });
