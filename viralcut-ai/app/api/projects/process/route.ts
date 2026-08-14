@@ -1,4 +1,4 @@
-export const maxDuration = 60;
+export const maxDuration = 300;
 // app/api/projects/process/route.ts
 // Orchestrates: transcribe -> detect viral clips -> trigger rendering.
 
