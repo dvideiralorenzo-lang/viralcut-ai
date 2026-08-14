@@ -11,6 +11,11 @@ export interface TranscriptSegment {
   text: string;
 }
 
+export interface TitleVariant {
+  title: string;
+  hook: string;
+}
+
 export interface ClipCandidate {
   title: string;
   hook: string;
@@ -19,8 +24,8 @@ export interface ClipCandidate {
   score: number; // 0-100
   reason: string;
   caption_style: "bold-yellow" | "bold-white" | "karaoke";
+  title_variants: TitleVariant[];
 }
-
 const SYSTEM_PROMPT = `You are an expert short-form video editor for TikTok, Reels, and YouTube Shorts.
 Given a timestamped transcript, identify the strongest standalone clips.
 
@@ -33,9 +38,12 @@ Criteria:
 
 Return ONLY a JSON array. Each item must have exactly these fields:
 title (string), hook (string), start_time (number, seconds),
-end_time (number, seconds), score (integer 0-100), reason (string, one sentence).
+end_time (number, seconds), score (integer 0-100), reason (string, one sentence),
+title_variants (array of exactly 3 objects, each with "title" and "hook" fields —
+three genuinely different angles on the same clip: one curiosity-driven, one
+emotional, one direct/bold. The first item in title_variants should match the
+main title and hook).
 No prose, no markdown fences — valid JSON only.`;
-
 export async function detectViralClips(
   segments: TranscriptSegment[]
 ): Promise<ClipCandidate[]> {
