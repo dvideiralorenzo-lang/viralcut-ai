@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     const candidates = await detectViralClips(segments);
 
-    const { data: insertedClips } = await supabaseAdmin
+    const { data: insertedClips } =await supabaseAdmin
       .from("clips")
       .insert(
         candidates.map((c) => ({
@@ -119,6 +119,7 @@ export async function POST(req: NextRequest) {
           score: c.score,
           reason: c.reason,
           caption_style: c.caption_style,
+          title_variants: c.title_variants ?? [],
           status: "pending",
         }))
       )
