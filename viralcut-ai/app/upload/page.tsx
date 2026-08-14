@@ -41,6 +41,7 @@ export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [captionColor, setCaptionColor] = useState("yellow");
   const [captionPosition, setCaptionPosition] = useState("bottom");
+  const [useEmojis, setUseEmojis] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleDrag(e: React.DragEvent, active: boolean) {
@@ -106,6 +107,7 @@ export default function UploadPage() {
         status: "uploaded",
         caption_color: captionColor,
         caption_position: captionPosition,
+        use_emojis: useEmojis,
       })
       .select()
       .single();
@@ -207,6 +209,20 @@ export default function UploadPage() {
                   <option value="yellow">Yellow</option>
                   <option value="white">White</option>
                   <option value="cyan">Cyan</option>
+                  <option value="pink">Pink</option>
+                  <option value="green">Green</option>
+                  <option value="orange">Orange</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-dim block mb-1">Emojis</label>
+                <select
+                  value={useEmojis ? "on" : "off"}
+                  onChange={(e) => setUseEmojis(e.target.value === "on")}
+                  className="w-full bg-raised border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-violet"
+                >
+                  <option value="on">On 🔥</option>
+                  <option value="off">Off</option>
                 </select>
               </div>
               <div>
