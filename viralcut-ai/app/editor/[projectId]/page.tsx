@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
+interface TitleVariant {
+  title: string;
+  hook: string;
+}
+
 interface Clip {
   id: string;
   title: string;
@@ -14,6 +19,7 @@ interface Clip {
   end_time: number;
   status: string;
   output_video_url: string | null;
+  title_variants: TitleVariant[];
 }
 
 interface Project {
@@ -80,7 +86,7 @@ export default function EditorPage() {
     const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, [projectId]);
-
+const [selectedTitles, setSelectedTitles] = useState<Record<string, number>>({});
   if (loading) {
     return (
       <main className="min-h-screen">
@@ -153,8 +159,32 @@ export default function EditorPage() {
                     {Math.round(clip.end_time - clip.start_time)}s duration
                   </span>
                 </div>
-                <p className="font-semibold text-sm mb-1">{clip.title}</p>
-                <p className="text-xs text-dim mb-3">"{clip.hook}"</p>
+               {(() => {
+                  const variants = clip.title_variants?.length ? clip.title_variants : [{ title: clip.title, hook: clip.hook }];
+                  const selected = selectedTitles[clip.id] ?? 0;
+                  const current = variants[selected] ?? variants[0];
+                  return (
+                    <>
+                      <p className="font-semibold text-sm mb-1">{current.title}</p>
+                      <p className="text-xs text-dim mb-2">"{current.hook}"</p>
+                      {variants.length > 1 && (
+                        <div className="flex gap-1 mb-3">
+                          {variants.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setSelectedTitles((prev) => ({ ...prev, [clip.id]: i }))}
+                              className={`text-[10px] px-2 py-1 rounded-full border ${
+                                selected === i ? "border-violet bg-violet/15 text-cyan" : "border-line text-dimmer"
+                              }`}
+                            >
+                              Option {i + 1}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 <p className="text-xs text-dimmer mt-auto">{clip.reason}</p>
                 {clip.output_video_url && (
                   <a href={clip.output_video_url}
